@@ -1,11 +1,11 @@
-let vmname = 'b1nzy-16.04';
-
 try {
   var tokens = require('./secrets.json');
 } catch (e) {
   console.log("You need to enter your token in ./secrets.json! (See an example in secrets_example.json)");
   return;
 }
+
+vmname = tokens.vmname;
 
 try {
   var Discord = require('discord.io');
@@ -27,16 +27,16 @@ var codes, keys;
 codes = {
 
   'ESCAPE': [0x01],
-  'NUMBER_1': [0x02],
-  'NUMBER_2': [0x03],
-  'NUMBER_3': [0x04],
-  'NUMBER_4': [0x05],
-  'NUMBER_5': [0x06],
-  'NUMBER_6': [0x07],
-  'NUMBER_7': [0x08],
-  'NUMBER_8': [0x09],
-  'NUMBER_9': [0x0A],
-  'NUMBER_0': [0x0B],
+  '1': [0x02],
+  '2': [0x03],
+  '3': [0x04],
+  '4': [0x05],
+  '5': [0x06],
+  '6': [0x07],
+  '7': [0x08],
+  '8': [0x09],
+  '9': [0x0A],
+  '0': [0x0B],
   'MINUS': [0x0C],
   '-': [0x0C],
   'EQUAL': [0x0D],
@@ -233,7 +233,7 @@ bot.on('ready', function () {
 
 let timers = {};
 
-function grabVMScreen(callback, c) {
+function grabVMScreen(callback, c, delay) {
   setTimeout(() => { // Wait a second before grabbing screenshot so that the OS has time to react to our changes
     let screenshotfile = "/tmp/sheller-" + new Date().getTime() + "-" + Math.floor(Math.random() * 1000) + ".png";
     child_process.exec("vboxmanage controlvm " + vmname + " screenshotpng " + screenshotfile, function (error, stdout, stderr) {
@@ -252,7 +252,7 @@ function grabVMScreen(callback, c) {
         }, 1000 * 30);
       });
     });
-  }, 1000);
+  }, delay || 1000);
 }
 
 bot.on('message', function (user, userID, channelID, message, event) {
@@ -282,8 +282,8 @@ bot.on('message', function (user, userID, channelID, message, event) {
   //   });
   // }
 
-  if (t == "screengrab") {
-    grabVMScreen(null, c);
+  if (t == "screengrab" || t == "screenshot" || t == "'") {
+    grabVMScreen(null, c, 0);
   }
 
   if (t == "blacklist") {
@@ -448,6 +448,15 @@ bot.on('message', function (user, userID, channelID, message, event) {
     });
   }
 
+  if (t == "scroll") {
+    co(function* () {
+      yield mouse.putMouseEvent(0, 0, a[0], a[1], 0);
+      grabVMScreen(null, c);
+    }).catch(function (err) {
+      say("Error: ```" + err + "```", c)
+    });
+  }
+
   if (t == "click") {
     let clickmask = 0;
     if (!a || !a[0]) a = ["left"];
@@ -471,6 +480,44 @@ bot.on('message', function (user, userID, channelID, message, event) {
     }
     co(function* () {
       yield mouse.putMouseEvent(1, 1, 0, 0, clickmask);
+      yield mouse.putMouseEvent(1, 1, 0, 0, 0x00);
+      grabVMScreen(null, c);
+    }).catch(function (err) {
+      say("Error: ```" + err + "```", c);
+    });
+  }
+
+  if (t == "release") {
+    let clickmask = 0;
+    if (!a || !a[0]) a = ["left"];
+    switch (a[0].toLowerCase()) {
+      case "right":
+      case "r":
+      case "1": {
+        clickmask = 0x02;
+        break;
+      }
+      case "middle":
+      case "m":
+      case "3": {
+        clickmask = 0x04;
+        break;
+      }
+      default: {
+        clickmask = 0x01;
+        break;
+      }
+    }
+    co(function* () {
+      yield mouse.putMouseEvent(1, 1, 0, 0, clickmask);
+      grabVMScreen(null, c);
+    }).catch(function (err) {
+      say("Error: ```" + err + "```", c);
+    });
+  }
+
+  if (t == "press") {
+    co(function* () {
       yield mouse.putMouseEvent(1, 1, 0, 0, 0x00);
       grabVMScreen(null, c);
     }).catch(function (err) {
@@ -521,9 +568,12 @@ bot.on('message', function (user, userID, channelID, message, event) {
     `mouse` - Moves the mouse cursor relative to the given coordinates (Usage: `mouse X Y`)\n\
     `click` - Clicks the given mouse button (Usage: `click left/right/middle`\n\
     `key` - Presses the space seperated keys (To press the space key use `SPACE`)\n\
-    `screengrab` - Sends an image of the VM's screen\n\
+    `screengrab` / `screenshot` / `'` - Sends an image of the VM's screen\n\
     `type` - Sends the given keystrokes (Usage: `type mspaint /h`)\n\
     `restart` - Restarts the VM\n\
+    `scroll` - Scrolls down the given amount (Usage: `scroll -10 0`)\n\
+    `press` - Pushes down a given mouse button\n\
+    `release` - Releases all held mouse buttons\n\
     `ping` - ????", c);
   }
 });
