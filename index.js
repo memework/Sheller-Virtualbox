@@ -342,6 +342,21 @@ bot.on('message', function (user, userID, channelID, message, event) {
     });
   }
 
+  if (t == "reset") {
+    co(function* () {
+      machine = yield vbox.findMachine(vmname);
+
+      session = yield websessionManager.getSessionObject(vbox);
+      iconsole = yield session.getConsole();
+      mouse = yield iconsole.getMouse();
+      keyboard = yield iconsole.getKeyboard();
+      guest = yield iconsole.getGuest();
+      say(":smiley: Done!", c);
+    }).catch(function(err) {
+      say("Error: ```" + err + "```");
+    });
+  }
+
   if (t == "type") {
     let codes = [];
 
