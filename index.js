@@ -19,9 +19,9 @@ scanmodules();
 var bot = new Discord.Client();
 bot.login(tokens.discord);
 
-bot.on("disconnect", function (err, code) {
-    console.warn("Jake attempted to kick me off Discord with error number: " + code + " (" + err + ")! Attempting reconnection :D");
-    bot.connect();
+bot.on("disconnect", function (err) {
+    console.warn("Jake attempted to kick me off Discord with error code: " + err.code + " (" + err.reason + ")! When I disconnected, the socket was" + (err.wasClean ? "" : " not") + " cleanly closed! Attempting reconnection :D");
+    bot.login(tokens.discord);
 });
 
 bot.on("ready", function () {
