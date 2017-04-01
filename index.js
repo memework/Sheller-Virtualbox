@@ -165,7 +165,8 @@ function callcommand(command, cmddata, callback, cmdmodule) {
                 findcommand,
                 callcommand,
                 modules,
-                generatehelp
+                generatehelp,
+                process
             };
             for (let adder in command.additional) {
                 additional[command.additional[adder]] = extradata[command.additional[adder]];

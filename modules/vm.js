@@ -69,6 +69,17 @@ function screenshot(data) { // t == "screengrab" || t == "screenshot" || t == "'
     grabVMScreen(data, 0);
 }
 
+function reset(data, extra) {
+    child_process.exec("vboxmanage controlvm " + tokens.vmname + " savestate", function (err2) {
+        if (err2) {
+            data.err(err2 + " (Attempting to continue)");
+        }
+        data.msg.channel.send("Saved VM state... Killing current process :skull:").then(function () {
+            extra.process.exit(0);
+        }).catch(data.err);
+    });
+}
+
 function blacklist(data) {
     if (data.msg.member.id != "196769986071625728") {
         data.msg.channel.send("NOPE!");
@@ -446,9 +457,11 @@ module.exports = {
         vars.bot.once("ready", () => {
             virtualboxinit(function () {
                 vars.bot.channels.get("295396269122387969").send("The VM is now ready! :+1:");
-            }, {err: function(err) {
-                if(err) vars.bot.channels.get("295396269122387969").send("The VM failed to start :sob: It failed with the error: ```" + err + "```");
-            }});
+            }, {
+                    err: function (err) {
+                        if (err) vars.bot.channels.get("295396269122387969").send("The VM failed to start :sob: It failed with the error: ```" + err + "```");
+                    }
+                });
         });
     },
     commands: [
@@ -517,6 +530,13 @@ module.exports = {
             call: unblacklist,
             description: "Removes a given user from the blacklist",
             category: "heating's commands pls no touch kthx"
+        },
+        {
+            trigger: "reset",
+            call: reset,
+            additional: ["process"],
+            description: "Restarts the bot (Fixes unnmanaged object errors 99% of the time)",
+            category: "virtualbox"
         }
     ]
 };

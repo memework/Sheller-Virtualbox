@@ -17,4 +17,4 @@ Setup:
   6. Add your Discord bot token to `secrets.json`
   7. Add the username and password you use to login to your computer to `secrets.json`
   8. Add the VM name to `secrets.json`
-  9. Run the bot: `node index.js`
+  9. Run the bot: `npm start`
