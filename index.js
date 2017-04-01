@@ -8,6 +8,7 @@ try {
     var Discord = require("discord.js");
     var fs = require("fs");
     var path = require("path");
+    var tmi = require("tmi.js");
 } catch (e) {
     throw new Error("You need to run `npm i` first!");
 }
@@ -31,6 +32,65 @@ bot.on("ready", function () {
 
 let timers = {};
 
+let twitch = new tmi.client({
+    options: {
+        debug: true
+    },
+    connection: {
+        reconnect: true
+    },
+    identity: {
+        username: tokens.twitchuser,
+        password: tokens.twitchpass
+    },
+    channels: [tokens.twitchchannel]
+});
+
+twitch.connect();
+twitch.on("connected", function() {
+    console.log("Connected to twitch! :)");
+    // twitch.join(tokens.twitchchannel);
+});
+
+twitch.on("message", function (channel, userstate, message, self) {
+    // Don't listen to my own messages..
+    if (self) return;
+
+    if (userstate["message-type"] != "chat") return; // We don't need to worry about this...
+
+    let args = message.split(" ");
+
+    let iscommand = false,
+        thecommand = args.shift(),
+        t;
+    for (let prefix in prefixes) {
+        iscommand = prefixes[prefix] == thecommand.substring(0, prefixes[prefix].length);
+        t = thecommand.substring(prefixes[prefix].length, thecommand.length);
+        if (iscommand) break;
+    }
+    if (!iscommand) return;
+
+    let cmddata = {
+        args,
+        trigger: t,
+        origin: "twitch",
+        say: (msg) => {
+            return twitch.action(channel, msg);
+        },
+        PMSay: (msg) => {
+            return twitch.whisper(userstate.username, msg);
+        }
+    };
+
+    findcommand(cmddata, true);
+});
+
+twitch.on("disconnect", function (err) {
+    console.log("Oh snap! I got disconnected from twitch with reason: " + err + "!");
+    console.log("Reconnecting...");
+    twitch.connect();
+});
+
 bot.on("message", function (msg) {
     let args = msg.content.split(" ");
 
@@ -47,7 +107,9 @@ bot.on("message", function (msg) {
     let cmddata = {
         msg,
         args,
-        trigger: t
+        trigger: t,
+        origin: "discord",
+        say: msg.channel.send
     };
 
     findcommand(cmddata, true);
@@ -139,9 +201,9 @@ function generatehelp(category) {
 }
 
 function callcommand(command, cmddata, callback, cmdmodule) {
-    try {
+    // try {
         if (command.channels && !command.channels.includes(cmddata.msg.channel.id)) {
-            cmddata.msg.channel.send("Sorry! That command isn't allowed in this channel! Try one of the following: <#" + command.channels.join(">, <#") + ">");
+            cmddata.say("Sorry! That command isn't allowed in this channel! Try one of the following: <#" + command.channels.join(">, <#") + ">");
             if (callback) {
                 callback("DisallowedInChannel");
             }
@@ -149,7 +211,7 @@ function callcommand(command, cmddata, callback, cmdmodule) {
         }
         if (command.permissions) {
             if (!cmddata.msg.member.hasPermissions(command.permissions)) {
-                cmddata.msg.channel.send("Sorry! You don't have the permissions needed to run this command! You need the following permissions: `" + command.permissions.join("`, `") + "`. The permissions you're missing are: `" + cmddata.msg.member.missingPermissions(command.permissions).join("`, `") + "`");
+                cmddata.say("Sorry! You don't have the permissions needed to run this command! You need the following permissions: `" + command.permissions.join("`, `") + "`. The permissions you're missing are: `" + cmddata.msg.member.missingPermissions(command.permissions).join("`, `") + "`");
                 if (callback) {
                     callback("MissingPermissions");
                 }
@@ -176,7 +238,7 @@ function callcommand(command, cmddata, callback, cmdmodule) {
         cmddata.err = function (err) {
             if (!err) return;
             if (callback) callback(err);
-            cmddata.msg.channel.send("Error running command `" + cmddata.trigger + "`: ```" + err + "```");
+            cmddata.say("Error running command `" + cmddata.trigger + "`: ```" + err + "```");
         };
 
         if (cmdmodule.preexec) {
@@ -192,10 +254,10 @@ function callcommand(command, cmddata, callback, cmdmodule) {
         } else {
             command.call(cmddata, additional);
         }
-    } catch (e) {
-        cmddata.err(e);
-        return false;
-    }
+    // } catch (e) {
+    //     cmddata.err(e);
+    //     return false;
+    // }
     if (callback) {
         callback(false);
     }

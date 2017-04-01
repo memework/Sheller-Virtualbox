@@ -1,4 +1,8 @@
 function ping(data, added) {
+    if(data.origin != "discord") {
+        data.say("Pong!");
+        return;
+    }
     data.msg.channel.send("http://generic.sucks Heartbeat: " + added.bot.ping + "ms, *Getting latency*").then(msg => {
         msg.edit(msg.content.replace("*Getting latency*", "Latency: " + Math.floor(new Date(msg.createdTimestamp).valueOf() - new Date(data.msg.createdTimestamp).valueOf()) + "ms"));
     }).catch(data.err);

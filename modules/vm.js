@@ -42,15 +42,18 @@ function virtualboxinit(callback, data) {
 }
 
 function grabVMScreen(data, delay) {
+    if (data.origin != "discord") {
+        return; // We only support this on Discord ATM
+    }
     setTimeout(() => { // Wait a second before grabbing screenshot so that the OS has time to react to our changes
         let screenshotfile = "/tmp/sheller-" + new Date().getTime() + "-" + Math.floor(Math.random() * 1000) + ".png";
         child_process.exec("vboxmanage controlvm " + tokens.vmname + " screenshotpng " + screenshotfile, function (error, stdout, stderr) {
             if (error) {
-                data.msg.channel.send("Error: ```" + error + "```");
+                data.say("Error: ```" + error + "```");
                 return;
             }
             if (stderr && stderr.trim() != "") {
-                data.msg.channel.send("Error: ```" + stderr + "```");
+                data.say("Error: ```" + stderr + "```");
                 return;
             }
             data.msg.channel.sendFile(screenshotfile, "generic-sucks.png").then(() => { //msg
@@ -66,6 +69,10 @@ function grabVMScreen(data, delay) {
 }
 
 function screenshot(data) { // t == "screengrab" || t == "screenshot" || t == "'"
+    if(data.origin != "discord") {
+        data.say("Sorry! This is only available on the Discord version of Sheller!");
+        return false;
+    }
     grabVMScreen(data, 0);
 }
 
@@ -74,7 +81,7 @@ function reset(data, extra) {
         if (err2) {
             data.err(err2 + " (Attempting to continue)");
         }
-        data.msg.channel.send("Saved VM state... Killing current process :skull:").then(function () {
+        data.say("Saved VM state... Killing current process :skull:").then(function () {
             extra.process.exit(0);
         }).catch(data.err);
     });
@@ -82,28 +89,28 @@ function reset(data, extra) {
 
 function blacklist(data) {
     if (data.msg.member.id != "196769986071625728") {
-        data.msg.channel.send("NOPE!");
+        data.say("NOPE!");
         return false;
     }
     let mem = data.msgs.mentions.users[0];
     blacklisted.push(mem.id);
-    data.msg.channel.send(":ok_hand: Added " + mem.username + "!");
+    data.say(":ok_hand: Added " + mem.username + "!");
 }
 
 function unblacklist(data) {
     if (data.msg.member.id != "196769986071625728") {
-        data.msg.channel.send("NOPE! :hammer:");
+        data.say("NOPE! :hammer:");
         return false;
     }
     let mem = data.msgs.mentions.users[0];
     blacklisted.push(mem.id);
     let ind = blacklisted.indexOf(mem);
     if (ind == -1) {
-        data.msg.channel.send("That user is not in the blacklist!");
+        data.say("That user is not in the blacklist!");
         return false;
     }
     blacklisted.splice(ind, 1);
-    data.msg.channel.send(":ok_hand " + mem + "! You're no longer in the blacklist :tada:");
+    data.say(":ok_hand " + mem + "! You're no longer in the blacklist :tada:");
 }
 
 function key(data) {
@@ -114,7 +121,7 @@ function key(data) {
     for (let k in keys) {
         keys[k] = keys[k].toUpperCase();
         if (!SCAN_CODES[keys[k]]) {
-            data.msg.channel.send("The key `" + keys[k] + "` doesn't exist! Skipping...");
+            data.say("The key `" + keys[k] + "` doesn't exist! Skipping...");
             continue;
         }
         let thecode = SCAN_CODES[keys[k]];
@@ -136,7 +143,7 @@ function key(data) {
 }
 
 function keys(data) {
-    data.msg.channel.send("Keys: ```" + Object.keys(SCAN_CODES).join(", ") + "```");
+    data.say("Keys: ```" + Object.keys(SCAN_CODES).join(", ") + "```");
 }
 
 function type(data) {
@@ -180,7 +187,7 @@ function type(data) {
     for (let k in keys) {
         keys[k].kind = keys[k].kind.toUpperCase();
         if (!SCAN_CODES[keys[k].kind]) {
-            data.msg.channel.send("The key `" + keys[k].kind + "` doesn't exist! Skipping...");
+            data.say("The key `" + keys[k].kind + "` doesn't exist! Skipping...");
             continue;
         }
 
@@ -230,7 +237,7 @@ function type(data) {
     // keyboard.putScancodes(codes).then(function () {
     //   grabVMScreen(data);
     // }).catch(function (err) {
-    //   data.msg.channel.send("Error: ```\n" + err + "```");
+    //   data.say("Error: ```\n" + err + "```");
     // });
 }
 
