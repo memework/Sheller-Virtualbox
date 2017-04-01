@@ -26,6 +26,7 @@ bot.on("disconnect", function (err) {
 
 bot.on("ready", function () {
     console.log("Successfully connected: " + bot.user.username + " - (" + bot.user.id + ")");
+    bot.channels.get("295396269122387969").send(":wave: I'm connected to Discord! Please wait until I say the VM is ready before running any VM-related commands! Thanks! :smiley:");
 });
 
 let timers = {};
@@ -131,7 +132,7 @@ function generatehelp(category) {
             if (command.category == category) helptext += "\n`" + command.trigger.join("` or `") + "` - " + (command.description ? command.description : "no description");
         }
     }
-    if(helptext == "") {
+    if (helptext == "") {
         return "The category **" + category + "** was not found!";
     }
     return helptextheader + helptext;
@@ -170,10 +171,17 @@ function callcommand(command, cmddata, callback, cmdmodule) {
                 additional[command.additional[adder]] = extradata[command.additional[adder]];
             }
         }
+
+        cmddata.err = function (err) {
+            if (!err) return;
+            if (callback) callback(err);
+            cmddata.msg.channel.send("Error running command `" + cmddata.trigger + "`: ```" + err + "```");
+        };
+
         if (cmdmodule.preexec) {
             cmdmodule.preexec(cmddata, function (allowed) {
-                if(!allowed) {
-                    if(callback) {
+                if (!allowed) {
+                    if (callback) {
                         callback("PreExecFalse");
                     }
                     return false;
@@ -184,10 +192,7 @@ function callcommand(command, cmddata, callback, cmdmodule) {
             command.call(cmddata, additional);
         }
     } catch (e) {
-        cmddata.msg.channel.send("Error running command `" + cmddata.trigger + "`: ```" + e + "```");
-        if (callback) {
-            callback(e);
-        }
+        cmddata.err(e);
         return false;
     }
     if (callback) {

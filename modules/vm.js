@@ -15,24 +15,31 @@ let keyboard;
 // let guest;
 
 const serverURL = "http://localhost:18083"; // This url is the default one, it can be omitted 
-virtualbox(serverURL).then(websessionManager => {
-    websessionManager.logon(tokens.username, tokens.password).then(vbox => {
-        vbox.findMachine(tokens.vmname).then(machine => {
-            websessionManager.getSessionObject(vbox).then(session => {
-                machine.launchVMProcess(session, "headless").then(progress => {
-                    progress.waitForCompletion(-1).then(() => {
-                        session.getConsole().then(iconsole => {
-                            iconsole.getMouse().then(mouse2 => { mouse = mouse2; });
-                            iconsole.getKeyboard().then(keyboard2 => { keyboard = keyboard2; });
-                            // iconsole.getGuest().then(guest2 => { guest = guest2; });
-                            console.log("Ready!");
-                        });
-                    });
-                });
-            });
-        });
-    });
-});
+
+function virtualboxinit(callback, data) {
+    virtualbox(serverURL).then(websessionManager => {
+        websessionManager.logon(tokens.username, tokens.password).then(vbox => {
+            vbox.findMachine(tokens.vmname).then(machine => {
+                websessionManager.getSessionObject(vbox).then(session => {
+                    machine.launchVMProcess(session, "headless").then(progress => {
+                        progress.waitForCompletion(-1).then(() => {
+                            session.getConsole().then(iconsole => {
+                                iconsole.getMouse().then(mouse2 => {
+                                    mouse = mouse2;
+                                    iconsole.getKeyboard().then(keyboard2 => {
+                                        keyboard = keyboard2;
+                                        console.log("Ready!");
+                                        callback();
+                                    }).catch(data.err);
+                                }).catch(data.err);
+                            }).catch(data.err);
+                        }).catch(data.err);
+                    }).catch(data.err);
+                }).catch(data.err);
+            }).catch(data.err);
+        }).catch(data.err);
+    }).catch(data.err);
+}
 
 function grabVMScreen(data, delay) {
     setTimeout(() => { // Wait a second before grabbing screenshot so that the OS has time to react to our changes
@@ -53,7 +60,7 @@ function grabVMScreen(data, delay) {
                 // setTimeout(function () {
                 //     msg.delete();
                 // }, 1000 * 30);
-            });
+            }).catch(data.err);
         });
     }, delay || 1000);
 }
@@ -114,7 +121,7 @@ function key(data) {
 
     keyboard.putScancodes(codes).then(function () {
         grabVMScreen(data);
-    });
+    }).catch(data.err);
 }
 
 function keys(data) {
@@ -129,32 +136,32 @@ function type(data) {
     for (let k in keystmp) {
         if (/[A-Z]/g.test(keystmp[k])) keys.push({ kind: "SHIFT", type: "on" });
         switch (keystmp[k]) {
-        case "{": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "[", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "}": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "]", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "\"": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "'", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "|": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "\\", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case ":": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: ";", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "!": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "1", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "@": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "2", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "#": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "3", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "$": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "4", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "%": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "5", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "^": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "6", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "&": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "7", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "*": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "8", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "(": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "9", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case ")": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "0", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "+": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "=", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "_": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "-", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "~": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "`", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "?": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "/", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case "<": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: ",", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
-        case ">": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: ".", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "{": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "[", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "}": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "]", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "\"": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "'", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "|": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "\\", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case ":": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: ";", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "!": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "1", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "@": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "2", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "#": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "3", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "$": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "4", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "%": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "5", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "^": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "6", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "&": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "7", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "*": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "8", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "(": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "9", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case ")": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "0", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "+": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "=", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "_": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "-", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "~": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "`", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "?": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: "/", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case "<": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: ",", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
+            case ">": { keys.push({ kind: "SHIFT", type: "on" }); keys.push({ kind: ".", type: "tap" }); keys.push({ kind: "SHIFT", type: "off" }); break; }
 
-        default: {
-            keys.push({ kind: keystmp[k], type: "tap" });
-            break;
-        }
+            default: {
+                keys.push({ kind: keystmp[k], type: "tap" });
+                break;
+            }
         }
         if (/[A-Z]/g.test(keystmp[k])) keys.push({ kind: "SHIFT", type: "off" });
     }
@@ -167,32 +174,32 @@ function type(data) {
         }
 
         switch (keys[k].type) {
-        case "on": {
-            let thecode = SCAN_CODES[keys[k].kind];
-            for (let itm in thecode) {
-                codes.push(thecode[itm]);
+            case "on": {
+                let thecode = SCAN_CODES[keys[k].kind];
+                for (let itm in thecode) {
+                    codes.push(thecode[itm]);
+                }
+                break;
             }
-            break;
-        }
-        case "off": {
-            let breakcode = SCAN_CODES.getBreakCode([keys[k].kind]);
-            for (let itm in breakcode) {
-                codes.push(breakcode[itm]);
+            case "off": {
+                let breakcode = SCAN_CODES.getBreakCode([keys[k].kind]);
+                for (let itm in breakcode) {
+                    codes.push(breakcode[itm]);
+                }
+                break;
             }
-            break;
-        }
-        case "tap":
-        default: {
-            let thecode = SCAN_CODES[keys[k].kind];
-            let breakcode = SCAN_CODES.getBreakCode([keys[k].kind]);
-            for (let itm in thecode) {
-                codes.push(thecode[itm]);
+            case "tap":
+            default: {
+                let thecode = SCAN_CODES[keys[k].kind];
+                let breakcode = SCAN_CODES.getBreakCode([keys[k].kind]);
+                for (let itm in thecode) {
+                    codes.push(thecode[itm]);
+                }
+                for (let itm in breakcode) {
+                    codes.push(breakcode[itm]);
+                }
+                break;
             }
-            for (let itm in breakcode) {
-                codes.push(breakcode[itm]);
-            }
-            break;
-        }
         }
     }
 
@@ -204,9 +211,7 @@ function type(data) {
         keyboard.putScancode(codes[i]).then(function () {
             i++;
             _sendkeys(i);
-        }).catch(function (err) {
-            data.msg.channel.send("Error: ```\n" + err + "```");
-        });
+        }).catch(data.err);
     }
 
     _sendkeys(0);
@@ -221,53 +226,53 @@ function type(data) {
 function mousemove(data) {
     mouse.putMouseEvent(data.args[0], data.args[1], 0, 0, 0).then(function () {
         grabVMScreen(data);
-    });
+    }).catch(data.err);
 }
 
 function scroll(data) {
     mouse.putMouseEvent(0, 0, data.args[0], data.args[1], 0).then(function () {
         grabVMScreen(data);
-    });
+    }).catch(data.err);
 }
 
 function click(data) {
     let clickmask = 0;
     if (!data.args || !data.args[0]) data.args = ["left"];
     switch (data.args[0].toLowerCase()) {
-    case "right":
-    case "r":
-    case "1": {
-        clickmask = 0x02;
-        break;
-    }
-    case "middle":
-    case "m":
-    case "3": {
-        clickmask = 0x04;
-        break;
-    }
-    default: {
-        clickmask = 0x01;
-        break;
-    }
+        case "right":
+        case "r":
+        case "1": {
+            clickmask = 0x02;
+            break;
+        }
+        case "middle":
+        case "m":
+        case "3": {
+            clickmask = 0x04;
+            break;
+        }
+        default: {
+            clickmask = 0x01;
+            break;
+        }
     }
     mouse.putMouseEvent(1, 1, 0, 0, clickmask).then(function () {
         mouse.putMouseEvent(1, 1, 0, 0, 0x00).then(function () {
             grabVMScreen(data);
-        });
-    });
+        }).catch(data.err);
+    }).catch(data.err);
 }
 
 function release(data) {
     mouse.putMouseEvent(1, 1, 0, 0, 0x00).then(function () {
         grabVMScreen(data);
-    });
+    }).catch(data.err);
 }
 
 function press(data) {
     mouse.putMouseEvent(1, 1, 0, 0, 0x00).then(function () {
         grabVMScreen(data);
-    });
+    }).catch(data.err);
 }
 
 
@@ -436,6 +441,15 @@ var SCAN_CODES = codes;
 module.exports = {
     preexec: function (data, callback) {
         callback(blacklisted.indexOf(data.msg.member.id) == -1);
+    },
+    sendvars: function (vars) {
+        vars.bot.once("ready", () => {
+            virtualboxinit(function () {
+                vars.bot.channels.get("295396269122387969").send("The VM is now ready! :+1:");
+            }, {err: function(err) {
+                if(err) vars.bot.channels.get("295396269122387969").send("The VM failed to start :sob: It failed with the error: ```" + err + "```");
+            }});
+        });
     },
     commands: [
         {
