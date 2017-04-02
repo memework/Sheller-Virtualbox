@@ -109,7 +109,9 @@ bot.on("message", function (msg) {
         args,
         trigger: t,
         origin: "discord",
-        say: msg.channel.send
+        say: (message) => {
+            return msg.channel.send(message);
+        }
     };
 
     findcommand(cmddata, true);

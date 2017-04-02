@@ -10,7 +10,7 @@ function help(data, added) {
             data.PMSay(helparr[i]);
         }, 2 * 1000);
     }
-    data.say();
+    data.say(thehelp);
 }
 
 module.exports.commands = [

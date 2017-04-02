@@ -10,7 +10,7 @@
   "author": "heatingdevice",
   "license": "MIT",
   "dependencies": {
-    "discord.js": "^2.5.1",
+    "discord.js": "github:hydrabolt/discord.js",
     "tmi.js": "^1.1.2",
     "virtualbox-soap": "^1.0.0"
   }
