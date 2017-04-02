@@ -350,7 +350,7 @@ codes = {
     "SEMICOLON": [0x27],
     ";": [0x27],
     "QUOTE": [0x28],
-    "\"": [0x28],
+    "'": [0x28],
     "BACKQUOTE": [0x29],
     "`": [0x29],
     "SHIFT": [0x2A],
