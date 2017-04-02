@@ -21,7 +21,7 @@ function virtualboxinit(callback, data) {
         websessionManager.logon(tokens.username, tokens.password).then(vbox => {
             vbox.findMachine(tokens.vmname).then(machine => {
                 websessionManager.getSessionObject(vbox).then(session => {
-                    machine.launchVMProcess(session, "headless").then(progress => {
+                    machine.launchVMProcess(session, "gui").then(progress => {
                         progress.waitForCompletion(-1).then(() => {
                             session.getConsole().then(iconsole => {
                                 iconsole.getMouse().then(mouse2 => {
