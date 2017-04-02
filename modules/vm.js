@@ -69,7 +69,7 @@ function grabVMScreen(data, delay) {
 }
 
 function screenshot(data) { // t == "screengrab" || t == "screenshot" || t == "'"
-    if(data.origin != "discord") {
+    if (data.origin != "discord") {
         data.say("Sorry! This is only available on the Discord version of Sheller!");
         return false;
     }
@@ -88,6 +88,7 @@ function reset(data, extra) {
 }
 
 function blacklist(data) {
+    if(data.origin != "discord") return;
     if (data.msg.member.id != "196769986071625728") {
         data.say("NOPE!");
         return false;
@@ -98,6 +99,7 @@ function blacklist(data) {
 }
 
 function unblacklist(data) {
+    if(data.origin != "discord") return;
     if (data.msg.member.id != "196769986071625728") {
         data.say("NOPE! :hammer:");
         return false;
@@ -458,13 +460,18 @@ var SCAN_CODES = codes;
 
 module.exports = {
     preexec: function (data, callback) {
-        callback(blacklisted.indexOf(data.msg.member.id) == -1);
+        if(data.origin != "discord") {
+            callback(true);
+        } else {
+            callback(blacklisted.indexOf(data.msg.member.id) == -1);
+        }
     },
     sendvars: function (vars) {
         vars.bot.once("ready", () => {
             virtualboxinit(function () {
                 vars.bot.channels.get("295396269122387969").send("The VM is now ready! :+1:");
-            }, {
+            },
+                {
                     err: function (err) {
                         if (err) vars.bot.channels.get("295396269122387969").send("The VM failed to start :sob: It failed with the error: ```" + err + "```");
                     }
